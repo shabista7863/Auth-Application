@@ -18,6 +18,8 @@ class CreateBlogPageTable extends Migration
             $table->string('title');
             $table->text('description');
             $table->string('articles');
+            $table->string('image');
+            $table->string('tag')->before('image');
             $table->timestamps();
         });
     }

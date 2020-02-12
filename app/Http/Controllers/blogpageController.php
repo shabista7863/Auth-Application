@@ -6,6 +6,7 @@ use App\blogpage;
 use Illuminate\Http\Request;
 use DB;
 use Redirect;
+use Image;
 class blogpageController extends Controller
 {
     /**
@@ -41,15 +42,35 @@ class blogpageController extends Controller
     //         'description' => 'required',
     //         'articles' => 'required',
     //     ]);
+
+   
+    if ($file=$request->hasFile('image')) {
+        $file = $request->file('image');
+        $filePath = date('YmdHis').'.'.$file->getClientOriginalExtension();
+
+        $originalPath  = public_path('/images'); 
+        $destinationPath = public_path('/images/thumbnail');     // thumbnail 
+
+        $img = Image::make($file->getRealPath());
+        $img->resize(100, 100, function ($constraint) {
+		    $constraint->aspectRatio();
+        })->save($destinationPath.'/'.$filePath);
+
+       $file->move($originalPath , $filePath);
+
         $blog = new blogpage();
         $blog->title = $request->title;
         $blog->description = $request->description;
         $blog->articles = $request->articles;
+        $blog->tag = $request->tag;  
+        $blog->image = $filePath;   //image uploaded in database
+   }
         $blog->save();
-        return view('authBackend/addBlog');
-        //return redirect('/addBlog')->with('success', 'blog inserted has been successfully ');
+          
+        //return view('authBackend/addBlog');
+        return redirect()->back()->with('success', 'blog inserted has been successfully ');
+        //}
     }
-
     /**
      * Display the specified resource.
      *
@@ -63,9 +84,15 @@ class blogpageController extends Controller
 
     public function view()
     {
-    $blog =DB::table('blogpage')->select('*')->get();
-   
-    return view('authBackend/listBlog')->with('blogs',$blog);
+    $blog =DB::table('blogpage')->select('*')->orderBy('id', 'desc')->get();
+    return view('authBackend/listBlog')->with('blog',$blog);
+    }
+
+    public function update(Request $request, blogpage $blogpage)
+    {
+        $blog =DB::table('blogpage')->select('*')->get();
+        return view('authBackend/editBlog')->with('blog',$blog);
+      
     }
     /**
      * Show the form for editing the specified resource.
@@ -73,11 +100,29 @@ class blogpageController extends Controller
      * @param  \App\blogpage  $blogpage
      * @return \Illuminate\Http\Response
      */
-    public function edit(blogpage $blogpage)
-    {
-        return view('authBackend/listBlog');
-    }
+    public function edit(Request $request)
+    {   
+      //  dd( $request->all() );
+      if ($file=$request->hasFile('image')) {
+          $file = $request->file('image');
+          $filePath = date('YmdHis').'.'.$file->getClientOriginalExtension();
 
+          $originalPath  = public_path('/images');  //original image
+      //  $destinationPath = public_path('/images/thumbnail');     // thumbnail image
+
+    //     $img = Image::make($file->getRealPath());
+    //     $img->resize(100, 100, function ($constraint) {
+	// 	    $constraint->aspectRatio();
+    //     })->save($destinationPath.'/'.$filePath);
+         $file->move($originalPath , $filePath);
+        echo $file->image = $filePath; 
+
+          DB::table('blogpage')
+           ->where('id', $request->id)
+            ->update(['title' =>$request->title,'description' =>$request->description,'articles' =>$request->articles,'tag' =>$request->tag,'image'=>$filePath]);
+           return redirect()->back()->with('success','updated successfull');
+    }
+    }
     /**
      * Update the specified resource in storage.
      *
@@ -85,10 +130,7 @@ class blogpageController extends Controller
      * @param  \App\blogpage  $blogpage
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, blogpage $blogpage)
-    {
-        //
-    }
+    
 
     /**
      * Remove the specified resource from storage.

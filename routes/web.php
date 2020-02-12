@@ -27,8 +27,22 @@ Route::get('/singin', 'singinController@create');
 Route::post('/singin', 'singinController@store');
 Route::get('/addBlog', 'blogpageController@show');
 Route::post('/addBlog', 'blogpageController@store');
-Route::get('/listBlog', 'blogpageController@edit');
+
 Route::get('/listBlog', 'blogpageController@view');
+Route::get('/editBlog/{id}', 'blogpageController@update');
+Route::post('/editBlog', 'blogpageController@edit');
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 Auth::routes();
